@@ -91,6 +91,7 @@ class FileExplorerActivity : AppCompatActivity() {
 
     private fun open(selectedItem: File) {
         if (selectedItem.isFile) {
+            copyUriToExternalFilesDir(this, selectedItem.absolutePath, "hello.jpg");
             return openFile(this, selectedItem)
         }
 

@@ -17,11 +17,14 @@
 package com.android.samples.filemanager
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Environment
 import android.webkit.MimeTypeMap
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
-import java.io.File
+import java.io.*
+import kotlin.concurrent.thread
 
 private const val AUTHORITY = "${BuildConfig.APPLICATION_ID}.provider"
 
@@ -63,4 +66,31 @@ fun openFile(activity: AppCompatActivity, selectedItem: File) {
     intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
     intent.setDataAndType(uri, mime)
     return activity.startActivity(intent)
+}
+
+//fun  copyUriToExternalFilesDir(activity: AppCompatActivity, uri: Uri, fileName: String) {
+fun  copyUriToExternalFilesDir(activity: AppCompatActivity, selectedItem : String, fileName: String) {
+    thread {
+//        val inputStream = activity.contentResolver.openInputStream(uri)
+        val inputStream = FileInputStream(File(selectedItem))
+        val tempDir = activity.getExternalFilesDir("temp")
+        if (inputStream != null && tempDir != null) {
+            val file = File("$tempDir/$fileName")
+            val fos = FileOutputStream(file)
+            val bis = BufferedInputStream(inputStream)
+            val bos = BufferedOutputStream(fos)
+            val byteArray = ByteArray(1024)
+            var bytes = bis.read(byteArray)
+            while (bytes > 0) {
+                bos.write(byteArray, 0, bytes)
+                bos.flush()
+                bytes = bis.read(byteArray)
+            }
+            bos.close()
+            fos.close()
+            activity.runOnUiThread {
+                Toast.makeText(activity, "Copy file into $tempDir succeeded.", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
 }
